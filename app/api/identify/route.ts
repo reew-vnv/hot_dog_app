@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { auth } from "@/auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -27,6 +28,11 @@ function parseDataUrl(input: string): { mediaType: "image/jpeg" | "image/png" | 
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const session = await auth();
+  if (!session?.user) {
+    return Response.json({ success: false, error: "Sign in required" } satisfies IdentifyResponse, { status: 401 });
+  }
+
   let body: { image?: unknown };
   try {
     body = await request.json();

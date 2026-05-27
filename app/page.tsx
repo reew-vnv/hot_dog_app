@@ -1,180 +1,83 @@
-"use client";
+import { auth, signIn, signOut } from "@/auth";
+import CameraApp from "./camera-app";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+export default async function Home() {
+  const session = await auth();
 
-type Phase =
-  | { kind: "idle" }
-  | { kind: "denied"; reason: string }
-  | { kind: "ready" }
-  | { kind: "analyzing" }
-  | { kind: "result"; isCroissant: boolean; label: string }
-  | { kind: "error"; message: string };
-
-export default function Home() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [phase, setPhase] = useState<Phase>({ kind: "idle" });
-
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      setPhase({ kind: "ready" });
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : "Camera unavailable";
-      setPhase({ kind: "denied", reason });
-    }
-  }, []);
-
-  useEffect(() => {
-    startCamera();
-    return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-    };
-  }, [startCamera]);
-
-  const capture = useCallback(async () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-
-    const size = Math.min(video.videoWidth, video.videoHeight);
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const sx = (video.videoWidth - size) / 2;
-    const sy = (video.videoHeight - size) / 2;
-    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-
-    setPhase({ kind: "analyzing" });
-    try {
-      const resp = await fetch("/api/identify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: dataUrl }),
-      });
-      const data = await resp.json();
-      if (!data.success) {
-        setPhase({ kind: "error", message: data.error ?? "Unknown error" });
-        return;
-      }
-      setPhase({ kind: "result", isCroissant: data.isCroissant, label: data.label });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Network error";
-      setPhase({ kind: "error", message });
-    }
-  }, []);
-
-  const retake = useCallback(() => {
-    setPhase({ kind: "ready" });
-  }, []);
+  if (!session?.user) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center bg-black text-white px-6">
+        <h1 className="text-4xl font-bold tracking-tight">
+          SeeCroissant<span className="text-amber-400">.</span>
+        </h1>
+        <p className="mt-2 text-sm text-zinc-400">Is it a croissant?</p>
+        <form
+          action={async () => {
+            "use server";
+            await signIn("google", { redirectTo: "/" });
+          }}
+          className="mt-10"
+        >
+          <button
+            type="submit"
+            className="flex items-center gap-3 rounded-full bg-white text-black font-medium px-6 py-3 hover:bg-zinc-100 transition"
+          >
+            <GoogleMark />
+            Sign in with Google
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
-      <header className="px-5 py-4 border-b border-zinc-800">
-        <h1 className="text-xl font-bold tracking-tight">
-          SeeCroissant<span className="text-amber-400">.</span>
-        </h1>
-        <p className="text-xs text-zinc-400">Is it a croissant?</p>
-      </header>
-
-      <main className="relative flex-1 flex items-center justify-center overflow-hidden">
-        <video
-          ref={videoRef}
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <canvas ref={canvasRef} className="hidden" />
-
-        {phase.kind === "denied" && (
-          <div className="relative z-10 max-w-sm text-center px-6">
-            <p className="text-lg font-semibold">Camera access denied</p>
-            <p className="mt-2 text-sm text-zinc-400">{phase.reason}</p>
-            <button
-              onClick={startCamera}
-              className="mt-6 px-5 py-2 rounded-full bg-white text-black font-medium"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {phase.kind === "analyzing" && (
-            <div className="spinner-wrap">
-              <div className="spinner">
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-              </div>
-              <span className="label">Evaluating...</span>
-            </div>
-        )}
-
-        {phase.kind === "result" && (
-            <div
-                className={`absolute inset-0 flex flex-col items-center justify-center z-10 ${
-                    phase.isCroissant ? "bg-green-600/95" : "bg-red-600/95"
-                }`}
-            >
-              <p className="text-5xl sm:text-7xl font-black tracking-tight text-center px-4">
-                {phase.isCroissant ? "CROISSANT" : "NOT CROISSANT"}
-            </p>
-          </div>
-        )}
-
-        {phase.kind === "error" && (
-          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10 px-6 text-center">
-            <p className="text-lg font-semibold">Something went wrong</p>
-            <p className="mt-2 text-sm text-zinc-400">{phase.message}</p>
-            <button
-              onClick={retake}
-              className="mt-6 px-5 py-2 rounded-full bg-white text-black font-medium"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-      </main>
-
-      <footer className="px-5 py-6 border-t border-zinc-800 flex items-center justify-center">
-        {(phase.kind === "ready" || phase.kind === "idle") && (
+      <header className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">
+            SeeCroissant<span className="text-amber-400">.</span>
+          </h1>
+          <p className="text-xs text-zinc-400">Is it a croissant?</p>
+        </div>
+        <form
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/" });
+          }}
+        >
           <button
-            onClick={capture}
-            disabled={phase.kind !== "ready"}
-            className="w-20 h-20 rounded-full bg-white border-4 border-zinc-300 active:scale-95 transition disabled:opacity-40"
-            aria-label="Take photo"
-          />
-        )}
-        {(phase.kind === "result" || phase.kind === "error") && (
-          <button
-            onClick={retake}
-            className="px-8 py-3 rounded-full bg-white text-black font-semibold"
+            type="submit"
+            className="text-xs text-zinc-400 hover:text-white transition"
+            title={session.user.email ?? undefined}
           >
-            Retake
+            Sign out
           </button>
-        )}
-        {phase.kind === "analyzing" && (
-          <div className="w-20 h-20 rounded-full bg-zinc-700 animate-pulse" />
-        )}
-      </footer>
+        </form>
+      </header>
+      <CameraApp />
     </div>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.83z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"
+      />
+    </svg>
   );
 }
