@@ -101,6 +101,16 @@ body {
   background: #fff;
 }
 
+.result-banner.failed:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #fff;
+}
+
 .result-banner.failed {
   bottom: 0;
   background-color: var(--failed);
