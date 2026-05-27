@@ -24,3 +24,48 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  gap: 1.5rem;
+}
+.spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  animation: spin-step 1s steps(10, end) infinite;
+}
+@keyframes spin-step {
+  to { transform: rotate(360deg); }
+}
+.dot {
+  position: absolute;
+  border-radius: 50%;
+  background: #e8508a;
+  top: 50%;
+  left: 50%;
+  outline: 2px solid rgba(0,0,0,0.75);
+}
+.dot:nth-child(1)  { width:14px; height:14px; margin:-7px 0 0 -7px;    transform: rotate(0deg)   translateY(-32px); opacity:1.00; }
+.dot:nth-child(2)  { width:13px; height:13px; margin:-6.5px 0 0 -6.5px; transform: rotate(36deg)  translateY(-32px); opacity:0.90; }
+.dot:nth-child(3)  { width:12px; height:12px; margin:-6px 0 0 -6px;    transform: rotate(72deg)  translateY(-32px); opacity:0.80; }
+.dot:nth-child(4)  { width:11px; height:11px; margin:-5.5px 0 0 -5.5px; transform: rotate(108deg) translateY(-32px); opacity:0.68; }
+.dot:nth-child(5)  { width:10px; height:10px; margin:-5px 0 0 -5px;    transform: rotate(144deg) translateY(-32px); opacity:0.56; }
+.dot:nth-child(6)  { width: 9px; height: 9px; margin:-4.5px 0 0 -4.5px; transform: rotate(180deg) translateY(-32px); opacity:0.45; }
+.dot:nth-child(7)  { width: 8px; height: 8px; margin:-4px 0 0 -4px;    transform: rotate(216deg) translateY(-32px); opacity:0.34; }
+.dot:nth-child(8)  { width: 7px; height: 7px; margin:-3.5px 0 0 -3.5px; transform: rotate(252deg) translateY(-32px); opacity:0.26; }
+.dot:nth-child(9)  { width: 6px; height: 6px; margin:-3px 0 0 -3px;    transform: rotate(288deg) translateY(-32px); opacity:0.20; }
+.dot:nth-child(10) { width: 6px; height: 6px; margin:-3px 0 0 -3px;    transform: rotate(324deg) translateY(-32px); opacity:0.14; }
+
+.label {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+  -webkit-text-stroke: 4px rgba(0,0,0,0.75);
+  paint-order: stroke fill;
+}

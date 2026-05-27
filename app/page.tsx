@@ -111,22 +111,31 @@ export default function Home() {
         )}
 
         {phase.kind === "analyzing" && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
-            <p className="text-lg font-medium animate-pulse">Analyzing…</p>
-          </div>
+            <div className="spinner-wrap">
+              <div className="spinner">
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+              </div>
+              <span className="label">Evaluating...</span>
+            </div>
         )}
 
         {phase.kind === "result" && (
-          <div
-            className={`absolute inset-0 flex flex-col items-center justify-center z-10 ${
-              phase.isCroissant ? "bg-green-600/95" : "bg-red-600/95"
-            }`}
-          >
-            <p className="text-5xl sm:text-7xl font-black tracking-tight text-center px-4">
-              {phase.isCroissant ? "CROISSANT" : "NOT CROISSANT"}
-            </p>
-            <p className="mt-4 text-lg text-white/90">
-              Looks like: <span className="font-semibold">{phase.label}</span>
+            <div
+                className={`absolute inset-0 flex flex-col items-center justify-center z-10 ${
+                    phase.isCroissant ? "bg-green-600/95" : "bg-red-600/95"
+                }`}
+            >
+              <p className="text-5xl sm:text-7xl font-black tracking-tight text-center px-4">
+                {phase.isCroissant ? "CROISSANT" : "NOT CROISSANT"}
             </p>
           </div>
         )}
