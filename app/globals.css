@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --success: #4cce2a;
+  --failed: #cc1a1a;
 }
 
 @theme inline {
@@ -32,6 +34,10 @@ body {
   justify-content: center;
   padding: 3rem 0;
   gap: 1.5rem;
+  background: rgba(0,0,0,0.6);
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
 .spinner {
   position: relative;
@@ -69,4 +75,73 @@ body {
   -webkit-text-stroke: 4px rgba(0,0,0,0.75);
   paint-order: stroke fill;
   z-index: 100;
+}
+
+.result-banner {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-banner.success {
+  top: 0;
+  background-color: var(--success);
+}
+
+.result-banner.success:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #fff;
+}
+
+.result-banner.failed {
+  bottom: 0;
+  background-color: var(--failed);
+}
+
+.result-banner .result-label {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffffff;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+.result-banner.success .result-label {
+  padding: 6px 18px 18px;
+}
+
+.result-banner.failed .result-label {
+  padding: 18px 18px 10px;
+}
+
+.result-banner .result-circle {
+  position: absolute;
+  width: 71px;
+  height: 71px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.result-banner.success .result-circle  {
+  background: var(--success);
+  bottom: -49px;
+}
+
+.result-banner.failed .result-circle  {
+  background: var(--failed);
+  top: -50px;
 }
