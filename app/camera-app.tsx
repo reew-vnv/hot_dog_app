@@ -212,30 +212,20 @@ export default function CameraApp({ initialCount, paid, freeLimit }: CameraAppPr
         )}
 
         {phase.kind === "result" && phase.isCroissant && (
-            <div className="result-banner success">
-              <div className="result-label">Croissant</div>
-              <div className="result-circle">
-                <img src="check.svg" className="h-8 w-8" />
-              </div>
+          <div className="result-banner success absolute top-0 left-0 w-full z-10">
+            <div className="result-label">Croissant</div>
+            <div className="result-circle">
+              <img src="/check.svg" alt="" className="h-8 w-8" />
             </div>
+          </div>
         )}
 
         {phase.kind === "result" && !phase.isCroissant && (
-            <div className="result-banner failed">
-              <div className="result-label">Not croissant</div>
-              <div className="result-circle">
-                <img src="cross.svg" className="h-8 w-8" />
-              </div>
+          <div className="result-banner failed absolute bottom-0 left-0 w-full z-10">
+            <div className="result-label">Not croissant</div>
+            <div className="result-circle">
+              <img src="/cross.svg" alt="" className="h-8 w-8" />
             </div>
-        {phase.kind === "result" && (
-          <div
-            className={`absolute inset-0 flex flex-col items-center justify-center z-10 ${
-              phase.isCroissant ? "bg-green-600/95" : "bg-red-600/95"
-            }`}
-          >
-            <p className="text-5xl sm:text-7xl font-black tracking-tight text-center px-4">
-              {phase.isCroissant ? "CROISSANT" : "NOT CROISSANT"}
-            </p>
           </div>
         )}
 
