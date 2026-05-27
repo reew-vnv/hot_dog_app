@@ -15,6 +15,7 @@ export default function CameraApp() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -56,6 +57,7 @@ export default function CameraApp() {
     ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
 
+    setCapturedImage(dataUrl);
     setPhase({ kind: "analyzing" });
     try {
       const resp = await fetch("/api/identify", {
@@ -76,6 +78,7 @@ export default function CameraApp() {
   }, []);
 
   const retake = useCallback(() => {
+    setCapturedImage(null);
     setPhase({ kind: "ready" });
   }, []);
 
@@ -88,6 +91,13 @@ export default function CameraApp() {
           muted
           className="absolute inset-0 w-full h-full object-cover"
         />
+        {capturedImage && (
+          <img
+            src={capturedImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
         <canvas ref={canvasRef} className="hidden" />
 
         {phase.kind === "denied" && (
