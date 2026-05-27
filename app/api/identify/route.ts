@@ -82,6 +82,7 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ success: true, isCroissant: result.isCroissant, label: result.label } satisfies IdentifyResponse);
   } catch (error) {
+    console.error("identify error:", error);
     if (error instanceof Anthropic.AuthenticationError) {
       return Response.json({ success: false, error: "ANTHROPIC_API_KEY missing or invalid" } satisfies IdentifyResponse, { status: 500 });
     }
