@@ -68,4 +68,5 @@ body {
   letter-spacing: 1px;
   -webkit-text-stroke: 4px rgba(0,0,0,0.75);
   paint-order: stroke fill;
+  z-index: 100;
 }
