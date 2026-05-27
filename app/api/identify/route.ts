@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/auth";
+import { FREE_LIMIT, getPhotoCount, incrementPhotoCount, isPaid } from "@/lib/kv";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -18,8 +19,8 @@ or
 The "label" is your best 1-3 word guess of what's actually in the photo. If you can't tell (blurry, dark, no clear subject), return {"isCroissant": false, "label": "unclear"}.`;
 
 type IdentifyResponse =
-  | { success: true; isCroissant: boolean; label: string }
-  | { success: false; error: string };
+  | { success: true; isCroissant: boolean; label: string; count: number }
+  | { success: false; error: string; paywall?: true; count?: number };
 
 function parseDataUrl(input: string): { mediaType: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string } | null {
   const match = input.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/);
@@ -29,7 +30,7 @@ function parseDataUrl(input: string): { mediaType: "image/jpeg" | "image/png" | 
 
 export async function POST(request: Request): Promise<Response> {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user?.email) {
     return Response.json({ success: false, error: "Sign in required" } satisfies IdentifyResponse, { status: 401 });
   }
 
@@ -49,6 +50,17 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(
       { success: false, error: "Image must be a base64 data URL (image/jpeg, png, webp, or gif)" } satisfies IdentifyResponse,
       { status: 400 },
+    );
+  }
+
+  const [count, paid] = await Promise.all([
+    getPhotoCount(session.user.email),
+    isPaid(session.user.email),
+  ]);
+  if (!paid && count >= FREE_LIMIT) {
+    return Response.json(
+      { success: false, error: "Free limit reached", paywall: true, count } satisfies IdentifyResponse,
+      { status: 402 },
     );
   }
 
@@ -86,7 +98,9 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ success: false, error: "Model response had unexpected shape" } satisfies IdentifyResponse, { status: 502 });
     }
 
-    return Response.json({ success: true, isCroissant: result.isCroissant, label: result.label } satisfies IdentifyResponse);
+    const newCount = await incrementPhotoCount(session.user.email);
+
+    return Response.json({ success: true, isCroissant: result.isCroissant, label: result.label, count: newCount } satisfies IdentifyResponse);
   } catch (error) {
     console.error("identify error:", error);
     if (error instanceof Anthropic.AuthenticationError) {

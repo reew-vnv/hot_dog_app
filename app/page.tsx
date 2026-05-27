@@ -1,4 +1,5 @@
 import { auth, signIn, signOut } from "@/auth";
+import { FREE_LIMIT, getPhotoCount, isPaid } from "@/lib/kv";
 import CameraApp from "./camera-app";
 
 export default async function Home() {
@@ -30,6 +31,9 @@ export default async function Home() {
     );
   }
 
+  const email = session.user.email!;
+  const [initialCount, paid] = await Promise.all([getPhotoCount(email), isPaid(email)]);
+
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
       <header className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
@@ -54,7 +58,7 @@ export default async function Home() {
           </button>
         </form>
       </header>
-      <CameraApp />
+      <CameraApp initialCount={initialCount} paid={paid} freeLimit={FREE_LIMIT} />
     </div>
   );
 }
